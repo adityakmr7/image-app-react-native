@@ -10,8 +10,10 @@ import {
   Dimensions,
   Animated,
   TouchableWithoutFeedback,
+  TouchableOpacity,
 } from "react-native";
 import axios from "axios";
+import { Ionicons } from "@expo/vector-icons";
 import { ACCESS_KEY, SECRET_KEY } from "./env.json";
 
 export default function App() {
@@ -21,6 +23,7 @@ export default function App() {
   const [focused, setFocused] = useState(false);
 
   const scaleIn = useRef(new Animated.Value(0)).current;
+  const actionBarY = useRef(new Animated.Value(1)).current;
 
   const scaleInImage = (item) => {
     setFocused(!focused);
@@ -83,33 +86,60 @@ export default function App() {
             />
           </Animated.View>
         </TouchableWithoutFeedback>
+        <Animated.View
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: actionBarY.interpolate({
+              inputRange: [0.9, 1],
+              outputRange: [0, -80],
+            }),
+            height: 80,
+            backgroundColor: "white",
+            flexDirection: "row",
+            justifyContent: "space-around",
+          }}
+        >
+          <View
+            style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+          >
+            <TouchableOpacity
+              activeOpacity={0.5}
+              onPress={() => alert("loadImages")}
+            >
+              <Ionicons name="ios-refresh" color="white" size={40} />
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
       </View>
     );
   };
 
-  return loading ? (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: "black",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <ActivityIndicator size={"large"} color="grey" />
-    </View>
-  ) : (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
-      <FlatList horizontal pagingEnabled data={image} renderItem={renderItem} />
-    </SafeAreaView>
-  );
+  if (loading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "black",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <ActivityIndicator size={"large"} color="grey" />
+      </View>
+    );
+  } else {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
+        <FlatList
+          scrollEnabled={!focused}
+          horizontal
+          pagingEnabled
+          data={image}
+          renderItem={renderItem}
+        />
+      </SafeAreaView>
+    );
+  }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
