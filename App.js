@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   StyleSheet,
   SafeAreaView,
@@ -9,6 +9,7 @@ import {
   FlatList,
   Dimensions,
   Animated,
+  TouchableWithoutFeedback,
 } from "react-native";
 import axios from "axios";
 import { ACCESS_KEY, SECRET_KEY } from "./env.json";
@@ -17,6 +18,22 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [image, setImage] = useState([]);
   const { height, width } = Dimensions.get("window");
+  const [focused, setFocused] = useState(false);
+
+  const scaleIn = useRef(new Animated.Value(0)).current;
+
+  const scaleInImage = (item) => {
+    setFocused(!focused);
+    if (focused) {
+      Animated.spring(scaleIn, {
+        toValue: 0.9,
+      }).start();
+    } else {
+      Animated.spring(scaleIn, {
+        toValue: 1,
+      }).start();
+    }
+  };
 
   const URL = `https://api.unsplash.com/photos/random?count=30&client_id=${ACCESS_KEY}`;
   useEffect(() => {
@@ -55,12 +72,17 @@ export default function App() {
         >
           <ActivityIndicator size="large" color="grey" />
         </View>
-        <View key={item.id} style={{ height, width }}>
-          <Image
-            style={{ flex: 1, height: null, width: null }}
-            source={{ uri: item.urls.regular }}
-          />
-        </View>
+        <TouchableWithoutFeedback onPress={() => scaleInImage(item)}>
+          <Animated.View
+            key={item.id}
+            style={[{ height, width }, { transform: [{ scale: scaleIn }] }]}
+          >
+            <Image
+              style={{ flex: 1, height: null, width: null }}
+              source={{ uri: item.urls.regular }}
+            />
+          </Animated.View>
+        </TouchableWithoutFeedback>
       </View>
     );
   };
@@ -78,20 +100,7 @@ export default function App() {
     </View>
   ) : (
     <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
-      <FlatList
-        horizontal
-        pagingEnabled
-        data={image}
-        // renderItem={({ item }) => (
-        //   <View key={item.id} style={{ height, width }}>
-        //     <Image
-        //       style={{ flex: 1, height: null, width: null }}
-        //       source={{ uri: item.urls.regular }}
-        //     />
-        //   </View>
-        // )}
-        renderItem={renderItem}
-      />
+      <FlatList horizontal pagingEnabled data={image} renderItem={renderItem} />
     </SafeAreaView>
   );
 }
